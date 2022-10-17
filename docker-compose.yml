@@ -1,0 +1,44 @@
+# build image with: docker-compose build
+# run container with: docker-compose up
+# build and run with: docker-compose up --build
+
+version: '3.7'
+
+services:
+  api:
+    # where the container's files are located in project folder
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    # the name of the container image docker-compose will build
+    image: api-server
+    # the name of the container when running
+    container_name: my-api-server
+    volumes:
+      - ./api:/var/www/html/
+    # exposing port 80 and mapping to container's external port 80 so it can be hit
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=development
+  
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    image: client-server
+    container_name: my-client-server
+    command: npm start
+    volumes:
+      # bind mounting entire project folder to container for watcher detection
+      - ./client:/usr/app
+      # node_modules gets its own volume for all containers to share
+      - node_modules:/usr/app/node_modules
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+
+volumes:
+    # the one volume that was created
+    node_modules:
